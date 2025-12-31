@@ -185,6 +185,25 @@ function shuffle<T>(input: T[]) {
   return clone
 }
 
+const overpassEndpoints = [
+  'https://overpass-api.de/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+]
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs = 20000) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal })
+    clearTimeout(timer)
+    return response
+  } catch (error) {
+    clearTimeout(timer)
+    throw error
+  }
+}
+
 async function fetchAddresses(): Promise<AddressResult[]> {
   const radiusMeters = Math.round(radiusKm.value * 1000)
   const query = `[out:json][timeout:30];
@@ -194,41 +213,60 @@ async function fetchAddresses(): Promise<AddressResult[]> {
 );
 out center;`
 
-  const response = await fetch('https://overpass-api.de/api/interpreter', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/plain',
-    },
-    body: query,
-  })
+  let lastError: unknown = null
 
-  if (!response.ok) {
-    throw new Error('Overpass API error')
+  for (const endpoint of overpassEndpoints) {
+    try {
+      const response = await fetchWithTimeout(
+        endpoint,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: query,
+        },
+        20000,
+      )
+
+      if (!response.ok) {
+        throw new Error(`Overpass error ${response.status}`)
+      }
+
+      const contentType = response.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        const text = await response.text()
+        throw new Error(`Unexpected response type: ${contentType} ${text.slice(0, 180)}`)
+      }
+
+      const data = (await response.json()) as OverpassResponse
+      const elements = data.elements || []
+
+      const formatted = elements
+        .filter((item) => item.tags?.['addr:street'] && item.tags?.['addr:housenumber'])
+        .map((item) => {
+          const coords = toCoordinate(item)
+          if (!coords) return null
+
+          const addressText = formatTaiwanAddress(item.tags || {})
+          return addressText
+            ? {
+                id: item.id,
+                address: addressText,
+                lat: coords.lat,
+                lng: coords.lng,
+                rawTags: item.tags || {},
+              }
+            : null
+        })
+        .filter(Boolean) as AddressResult[]
+
+      return formatted
+    } catch (error) {
+      lastError = error
+      console.warn(`Overpass endpoint failed: ${endpoint}`, error)
+    }
   }
 
-  const data = (await response.json()) as OverpassResponse
-  const elements = data.elements || []
-
-  const formatted = elements
-    .filter((item) => item.tags?.['addr:street'] && item.tags?.['addr:housenumber'])
-    .map((item) => {
-      const coords = toCoordinate(item)
-      if (!coords) return null
-
-      const addressText = formatTaiwanAddress(item.tags || {})
-      return addressText
-        ? {
-            id: item.id,
-            address: addressText,
-            lat: coords.lat,
-            lng: coords.lng,
-            rawTags: item.tags || {},
-          }
-        : null
-    })
-    .filter(Boolean) as AddressResult[]
-
-  return formatted
+  throw lastError || new Error('All Overpass endpoints failed')
 }
 
 async function generateAddresses() {
