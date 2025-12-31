@@ -40,6 +40,7 @@ const addressMarkers = ref<Marker[]>([])
 const radiusKm = ref(2)
 const addressCount = ref(10)
 const loading = ref(false)
+const lastRequestAt = ref<number | null>(null)
 const statusMessage = ref('點擊地圖設定中心點，然後按下「立即產生」。')
 const statusState = ref<'idle' | 'success' | 'empty' | 'error'>('idle')
 const randomAddresses = ref<AddressResult[]>([])
@@ -221,7 +222,10 @@ out center;`
         endpoint,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
+          headers: {
+            'Content-Type': 'text/plain',
+            'User-Agent': 'Taiwan-Real-Address-Randomizer/1.0 (https://github.com/ck642509/taiwan-real-address-randomizer)',
+          },
           body: query,
         },
         20000,
@@ -270,6 +274,16 @@ out center;`
 }
 
 async function generateAddresses() {
+  const now = Date.now()
+  const cooldownMs = 3000
+  if (lastRequestAt.value && now - lastRequestAt.value < cooldownMs) {
+    const waitSec = Math.ceil((cooldownMs - (now - lastRequestAt.value)) / 1000)
+    statusState.value = 'idle'
+    statusMessage.value = `請稍候 ${waitSec} 秒後再嘗試，避免頻繁請求。`
+    return
+  }
+
+  lastRequestAt.value = now
   loading.value = true
   statusState.value = 'idle'
   statusMessage.value = '資料請求中，約需數秒...'
