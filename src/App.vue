@@ -318,7 +318,7 @@ async function copyAll() {
 
 <template>
   <main class="px-4 py-8 md:py-12">
-    <div class="mx-auto flex max-w-6xl flex-col gap-6">
+    <div class="mx-auto flex max-w-7xl flex-col gap-6">
       <header class="flex flex-col gap-3">
         <div class="flex flex-wrap items-center gap-2">
           <span class="tag border border-slate-700 bg-slate-800/80 text-slate-200">Leaflet + OSM</span>
@@ -333,8 +333,8 @@ async function copyAll() {
         </div>
       </header>
 
-      <div class="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <section class="card-surface map-shadow p-4 md:p-5">
+      <div class="grid gap-6 lg:grid-cols-[1.3fr_1.2fr_1.2fr]">
+        <section class="card-surface map-shadow p-4 md:p-5 lg:col-span-1">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-300">
             <div class="flex items-center gap-3">
               <div class="flex items-center gap-2">
@@ -360,8 +360,7 @@ async function copyAll() {
             </div>
           </div>
         </section>
-
-        <section class="flex flex-col gap-4">
+        <section class="flex flex-col gap-4 lg:col-span-1">
           <div class="card-surface p-4 md:p-5">
             <div class="flex items-start justify-between gap-3">
               <div>
@@ -431,41 +430,41 @@ async function copyAll() {
               </button>
             </div>
           </div>
+        </section>
 
-          <div class="card-surface p-4 md:p-5">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <p class="text-lg font-semibold text-white">結果清單</p>
-                <p class="text-sm text-slate-400">最新的隨機地址將列在下方。</p>
-              </div>
-              <button
-                class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-500 hover:text-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
-                :disabled="!randomAddresses.length"
-                @click="copyAll"
-              >
-                複製全部地址
-              </button>
+        <section class="card-surface p-4 md:p-5 lg:col-span-1">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-lg font-semibold text-white">結果清單</p>
+              <p class="text-sm text-slate-400">固定高度，超出時可卷軸檢視。</p>
+            </div>
+            <button
+              class="rounded-lg border border-slate-700 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-sky-500 hover:text-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="!randomAddresses.length"
+              @click="copyAll"
+            >
+              複製全部地址
+            </button>
+          </div>
+
+          <div class="mt-4 space-y-3 max-h-[460px] overflow-y-auto pr-1">
+            <div
+              v-if="!randomAddresses.length"
+              class="rounded-lg border border-dashed border-slate-800 bg-slate-900/50 px-4 py-5 text-center text-sm text-slate-400"
+            >
+              尚未產出資料，請設定條件後按下「立即產生」。
             </div>
 
-            <div class="mt-4 space-y-3">
-              <div
-                v-if="!randomAddresses.length"
-                class="rounded-lg border border-dashed border-slate-800 bg-slate-900/50 px-4 py-5 text-center text-sm text-slate-400"
-              >
-                尚未產出資料，請設定條件後按下「立即產生」。
-              </div>
-
-              <article
-                v-for="item in randomAddresses"
-                :key="item.id"
-                class="rounded-lg border border-slate-800 bg-slate-900/70 px-4 py-3 transition hover:border-sky-500/50"
-              >
-                <p class="text-base font-semibold text-white">{{ item.address }}</p>
-                <p class="text-xs text-slate-400">
-                  Lat {{ item.lat.toFixed(5) }} · Lng {{ item.lng.toFixed(5) }}
-                </p>
-              </article>
-            </div>
+            <article
+              v-for="item in randomAddresses"
+              :key="item.id"
+              class="rounded-lg border border-slate-800 bg-slate-900/70 px-4 py-3 transition hover:border-sky-500/50"
+            >
+              <p class="text-base font-semibold text-white">{{ item.address }}</p>
+              <p class="text-xs text-slate-400">
+                Lat {{ item.lat.toFixed(5) }} · Lng {{ item.lng.toFixed(5) }}
+              </p>
+            </article>
           </div>
         </section>
       </div>
