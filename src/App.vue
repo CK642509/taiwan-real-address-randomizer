@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import {
-  Circle,
-  Map as LeafletMap,
-  Marker,
-  divIcon,
-  map as createMap,
-  tileLayer,
-  type LatLngLiteral,
-} from 'leaflet'
+import * as L from 'leaflet'
+import type { LatLngLiteral } from 'leaflet'
 
 type OverpassElement = {
   id: number
@@ -32,10 +25,10 @@ type AddressResult = {
 }
 
 const mapRef = ref<HTMLDivElement | null>(null)
-const map = ref<LeafletMap | null>(null)
-const centerMarker = ref<Marker | null>(null)
-const rangeCircle = ref<Circle | null>(null)
-const addressMarkers = ref<Marker[]>([])
+const map = ref<L.Map | null>(null)
+const centerMarker = ref<L.Marker | null>(null)
+const rangeCircle = ref<L.Circle | null>(null)
+const addressMarkers = ref<L.Marker[]>([])
 
 const radiusKm = ref(2)
 const addressCount = ref(10)
@@ -46,14 +39,14 @@ const statusState = ref<'idle' | 'success' | 'empty' | 'error'>('idle')
 const randomAddresses = ref<AddressResult[]>([])
 const center = ref<LatLngLiteral>({ lat: 25.033, lng: 121.5654 })
 
-const centerIcon = divIcon({
+const centerIcon = L.divIcon({
   className: '',
   html: '<div class="marker-pin marker-center"></div>',
   iconSize: [18, 18],
   iconAnchor: [9, 9],
 })
 
-const addressIcon = divIcon({
+const addressIcon = L.divIcon({
   className: '',
   html: '<div class="marker-pin marker-address"></div>',
   iconSize: [18, 18],
@@ -82,13 +75,13 @@ onBeforeUnmount(() => {
 function initMap() {
   if (!mapRef.value) return
 
-  const instance = createMap(mapRef.value, {
+  const instance = L.map(mapRef.value, {
     zoomControl: true,
     minZoom: 6,
     maxZoom: 18,
   }).setView(center.value, 13)
 
-  tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
   }).addTo(instance)
 
@@ -106,29 +99,30 @@ function initMap() {
 function updateCenterVisuals(point: LatLngLiteral) {
   const mapInstance = map.value
   if (!mapInstance) return
+  const targetMap = mapInstance as L.Map
 
   center.value = point
 
   if (centerMarker.value) {
     centerMarker.value.setLatLng(point)
   } else {
-    centerMarker.value = new Marker(point, { icon: centerIcon }).addTo(mapInstance)
+    centerMarker.value = L.marker(point, { icon: centerIcon }).addTo(targetMap)
   }
 
   if (rangeCircle.value) {
     rangeCircle.value.setLatLng(point)
     rangeCircle.value.setRadius(radiusKm.value * 1000)
   } else {
-    rangeCircle.value = new Circle(point, {
+    rangeCircle.value = L.circle(point, {
       radius: radiusKm.value * 1000,
       color: '#38bdf8',
       weight: 2,
       fillOpacity: 0.12,
       fillColor: '#38bdf8',
-    }).addTo(mapInstance)
+    }).addTo(targetMap)
   }
 
-  mapInstance.flyTo(point, mapInstance.getZoom(), { duration: 0.4 })
+  targetMap.flyTo(point, targetMap.getZoom(), { duration: 0.4 })
 }
 
 function clearAddressMarkers() {
@@ -139,13 +133,14 @@ function clearAddressMarkers() {
 function paintAddressMarkers(addresses: AddressResult[]) {
   const mapInstance = map.value
   if (!mapInstance) return
+  const targetMap = mapInstance as L.Map
 
   clearAddressMarkers()
 
   addresses.forEach((item) => {
-    const marker = new Marker({ lat: item.lat, lng: item.lng }, { icon: addressIcon })
+    const marker = L.marker({ lat: item.lat, lng: item.lng }, { icon: addressIcon })
     marker.bindPopup(`<strong>${item.address}</strong><br />${item.lat.toFixed(5)}, ${item.lng.toFixed(5)}`)
-    marker.addTo(mapInstance)
+    marker.addTo(targetMap)
     addressMarkers.value.push(marker)
   })
 }
@@ -181,7 +176,9 @@ function shuffle<T>(input: T[]) {
   const clone = [...input]
   for (let i = clone.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[clone[i], clone[j]] = [clone[j], clone[i]]
+    const tmp = clone[i]!
+    clone[i] = clone[j]!
+    clone[j] = tmp
   }
   return clone
 }
