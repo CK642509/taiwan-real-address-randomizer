@@ -1,6 +1,8 @@
-# Taiwan Real Address Randomizer
+# 台灣真實地址隨機產生器
 
 Vue 3 + Leaflet 工具，利用 OpenStreetMap/Overpass API 在指定半徑內隨機產生台灣真實門牌地址，並於地圖上標註。
+
+已部屬在：https://taiwan-real-address-randomizer.vercel.app/
 
 ## 功能總覽
 - 地圖互動：Leaflet 底圖，點擊地圖可設定中心點並顯示藍色標記與半徑圓圈。
@@ -10,7 +12,7 @@ Vue 3 + Leaflet 工具，利用 OpenStreetMap/Overpass API 在指定半徑內隨
 - 地址清單：列出本次產生的地址並提供「複製全部」按鈕。
 
 ## 快速開始
-1. 安裝依賴
+1. 安裝套件
 ```sh
 npm install
 ```
@@ -28,8 +30,7 @@ npm run dev
 - 按「複製全部地址」可將列表文字複製到剪貼簿。
 
 ## 技術棧
-- Vue 3 + TypeScript（Composition API, `<script setup>`）
-- Vite
+- Vue 3 + TypeScript
 - Tailwind CSS
 - Leaflet（OSM Tiles）
 - Overpass API（台灣門牌資料）
