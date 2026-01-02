@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { event } from 'vue-gtag'
 import type { LatLngLiteral } from 'leaflet'
 import MapPanel from '../components/MapPanel.vue'
 import ControlPanel from '../components/ControlPanel.vue'
@@ -151,6 +152,12 @@ out center;`
 }
 
 async function generateAddresses() {
+  event('generate_now_click', {
+    event_category: 'engagement',
+    radius_km: radiusKm.value,
+    address_count: addressCount.value,
+  })
+
   const now = Date.now()
   const cooldownMs = 3000
   if (lastRequestAt.value && now - lastRequestAt.value < cooldownMs) {
@@ -190,6 +197,11 @@ async function generateAddresses() {
 }
 
 async function copyAll() {
+  event('copy_all_addresses', {
+    event_category: 'engagement',
+    address_count: randomAddresses.value.length,
+  })
+
   if (!randomAddresses.value.length) return
 
   try {
