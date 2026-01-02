@@ -76,7 +76,7 @@ function onAddressCountInput(event: Event) {
             <p class="text-slate-300">{{ props.statusMessage }}</p>
           </div>
           <span
-            class="rounded-full px-3 py-1 text-xs font-semibold"
+            class="rounded-full px-3 py-1 text-xs font-semibold min-w-[74px] text-center whitespace-nowrap"
             :class="{
               'bg-emerald-500/15 text-emerald-200 border border-emerald-500/30': props.statusState === 'success',
               'bg-amber-500/15 text-amber-200 border border-amber-500/30': props.statusState === 'empty',
